@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1 # for versions before 1.7.0 use apps/v1beta1
+kind: Deployment
+metadata:
+  name: jenkins-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+        role: master
+    spec:
+      containers:
+      - name: jenkins
+        imagePullPolicy: Always
+        image: stavco9/stav-jenkins:latest
+        ports:
+          - containerPort: 8080
+          - containerPort: 50000
+        volumeMounts:
+          - name: jenkins-volume
+            mountPath: /var/jenkins_home
+      initContainers:
+      - name: jenkins-home-permission-fix
+        image: busybox
+        command: ["/bin/chown","-R","1000", "/data"]
+        volumeMounts:
+        - name: jenkins-volume
+          mountPath: /data
+      volumes:
+      - name: jenkins-volume
+        persistentVolumeClaim:
+          claimName: jenkins-volume-claim 
